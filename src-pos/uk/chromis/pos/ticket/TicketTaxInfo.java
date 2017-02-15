@@ -41,6 +41,12 @@ public class TicketTaxInfo {
         taxtotal = 0.0;
     }
     
+    public TicketTaxInfo(TaxInfo tax, double subtotal, double taxtotal) {
+        this.tax = tax;
+        this.subtotal = subtotal;
+        this.taxtotal = taxtotal;
+    }
+    
     /**
      *
      * @return

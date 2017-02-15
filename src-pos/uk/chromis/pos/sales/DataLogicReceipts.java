@@ -24,13 +24,13 @@ import uk.chromis.data.loader.Datas;
 import uk.chromis.data.loader.PreparedSentence;
 import uk.chromis.data.loader.SerializerReadBasic;
 import uk.chromis.data.loader.SerializerReadClass;
-import uk.chromis.data.loader.SerializerReadString;
 import uk.chromis.data.loader.SerializerWriteBasicExt;
 import uk.chromis.data.loader.SerializerWriteString;
 import uk.chromis.data.loader.Session;
 import uk.chromis.data.loader.StaticSentence;
 import uk.chromis.pos.forms.AppConfig;
 import uk.chromis.pos.forms.BeanFactoryDataSingle;
+import uk.chromis.pos.json.util.TicketJsonParser;
 import uk.chromis.pos.ticket.TicketInfo;
 
 /**
@@ -38,6 +38,8 @@ import uk.chromis.pos.ticket.TicketInfo;
  * @author adrianromero
  */
 public class DataLogicReceipts extends BeanFactoryDataSingle {
+    
+    private final TicketJsonParser parser = new TicketJsonParser();
 
     private Session s;
 
@@ -58,18 +60,30 @@ public class DataLogicReceipts extends BeanFactoryDataSingle {
 
     /**
      *
-     * @param Id
+     * @param id
      * @return
      * @throws BasicException
      */
-    public final TicketInfo getSharedTicket(String Id) throws BasicException {
-
-        if (Id == null) {
+    public final TicketInfo getSharedTicket(String id) throws BasicException {
+        if (id == null) {
             return null;
-        } else {
-            Object[] record = (Object[]) new StaticSentence(s, "SELECT CONTENT FROM SHAREDTICKETS WHERE ID = ? ", SerializerWriteString.INSTANCE, new SerializerReadBasic(new Datas[]{Datas.SERIALIZABLE})).find(Id);
-            return record == null ? null : (TicketInfo) record[0];
         }
+        
+        Object[] record = (Object[]) new StaticSentence(
+                s, 
+                "SELECT CONTENT FROM SHAREDTICKETS WHERE ID = ?", 
+                SerializerWriteString.INSTANCE, 
+                new SerializerReadBasic(new Datas[]{Datas.STRING}))
+                .find(id);
+        
+        if (record == null) {
+            return null;
+        }
+        
+        String json = (String) record[0];
+        TicketInfo ticket = parser.deserialize(json);
+        
+        return ticket;
     }
 
     /**
@@ -101,19 +115,20 @@ public class DataLogicReceipts extends BeanFactoryDataSingle {
      * @throws BasicException
      */
     public final void updateSharedTicket(final String id, final TicketInfo ticket, int pickupid) throws BasicException {
-
         Object[] values = new Object[]{
             id,
             ticket.getName(),
-            ticket,
+            parser.serialize(ticket),
             pickupid
         };
+        
         Datas[] datas = new Datas[]{
             Datas.STRING,
             Datas.STRING,
-            Datas.SERIALIZABLE,
+            Datas.STRING,
             Datas.INT
         };
+        
         new PreparedSentence(s, "UPDATE SHAREDTICKETS SET "
                 + "NAME = ?, "
                 + "CONTENT = ?, "
@@ -129,19 +144,18 @@ public class DataLogicReceipts extends BeanFactoryDataSingle {
      * @throws BasicException
      */
     public final void insertSharedTicket(final String id, final TicketInfo ticket, int pickupid) throws BasicException {
-
         Object[] values = new Object[]{
             id,
             ticket.getName(),
-            ticket,
+            parser.serialize(ticket),
             pickupid,
             ticket.printUser()
         };
-        Datas[] datas;
-        datas = new Datas[]{
+        
+        Datas[] datas = new Datas[]{
             Datas.STRING,
             Datas.STRING,
-            Datas.SERIALIZABLE,
+            Datas.STRING,
             Datas.INT,
             Datas.STRING
         };
@@ -159,15 +173,15 @@ public class DataLogicReceipts extends BeanFactoryDataSingle {
         Object[] values = new Object[]{
             id,
             "Pickup Id: " + getPickupString(pickupid),
-            ticket,
+            parser.serialize(ticket),
             pickupid,
             ticket.getUser().getName()
         };
-        Datas[] datas;
-        datas = new Datas[]{
+        
+        Datas[] datas = new Datas[]{
             Datas.STRING,
             Datas.STRING,
-            Datas.SERIALIZABLE,
+            Datas.STRING,
             Datas.INT,
             Datas.STRING
         };

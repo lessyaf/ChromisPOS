@@ -241,6 +241,10 @@ public final class TicketInfo implements SerializableRead, Externalizable {
     public String getId() {
         return m_sId;
     }
+    
+    public void setId(String value) {
+        m_sId = value;
+    }
 
     /**
      *
@@ -383,6 +387,10 @@ public final class TicketInfo implements SerializableRead, Externalizable {
     public UserInfo getSharedTicketUser() {
         return m_sharedticketUser;
     }
+    
+    public void setSharedTicketUser(UserInfo value) {
+        m_sharedticketUser = value;
+    }
 
     public void setUser(UserInfo value) {
         m_User = value;
@@ -438,6 +446,10 @@ public final class TicketInfo implements SerializableRead, Externalizable {
 
     public Properties getProperties() {
         return attributes;
+    }
+    
+    public void setProperties(Properties value) {
+        attributes = value;
     }
 
     public TicketLineInfo getLine(int index) {
@@ -587,6 +599,14 @@ public final class TicketInfo implements SerializableRead, Externalizable {
     public double getTendered() {
         return getTotalTendered();
     }
+    
+    public CouponSet getCouponSet() {
+        return m_CouponLines;
+    }
+    
+    public void setCouponSet(CouponSet value) {
+        m_CouponLines = value;
+    }
 
     public List<String> getCouponLines() {
         return m_CouponLines.getCouponLines();
@@ -690,6 +710,10 @@ public final class TicketInfo implements SerializableRead, Externalizable {
 
     public String getHost() {
         return m_sHost;
+    }
+    
+    public void setHost(String value) {
+        m_sHost = value;
     }
 
     public String printHost() {

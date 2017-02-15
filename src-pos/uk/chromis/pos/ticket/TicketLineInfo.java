@@ -166,6 +166,10 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
     public String getTicket() {
         return m_sTicket;
     }
+    
+    public void setTicket(String value) {
+        m_sTicket = value;
+    }
 
     public void setRefundTicket(String ticket, int line) {
         m_sTicket = ticket;
@@ -277,7 +281,7 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
         return refundQty;
     }
 
-    public void setRefundQty(double qty) {
+    public void setRefundQty(Double qty) {
         refundQty = qty;
     }
 
@@ -289,7 +293,7 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
         return orderQty;
     }
 
-    public void setOrderQty(double qty) {
+    public void setOrderQty(Double qty) {
         orderQty = qty;
     }
 
@@ -387,6 +391,10 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 
     public Properties getProperties() {
         return attributes;
+    }
+    
+    public void setProperties(Properties value) {
+        attributes = value;
     }
 
     public double getTaxRate() {

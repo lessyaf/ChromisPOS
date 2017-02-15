@@ -21,6 +21,7 @@ package uk.chromis.pos.ticket;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -35,8 +36,17 @@ import uk.chromis.data.loader.SerializableWrite;
  *
  * @author John Barrett
  */
-public class CouponSet implements SerializableWrite, SerializableRead, Serializable{
-    Set<CouponLine> lines = new TreeSet<CouponLine>();
+public class CouponSet implements SerializableWrite, SerializableRead, Serializable {
+    
+    private Set<CouponLine> lines;
+    
+    public CouponSet() {
+        lines = new TreeSet();
+    }
+    
+    public CouponSet(Collection<CouponLine> collection) {
+        lines = new TreeSet(collection);
+    }
 
     public CouponLine findLine( String id, int linenumber ) {  
         Iterator<CouponLine> iterator = lines.iterator();
@@ -115,4 +125,9 @@ public class CouponSet implements SerializableWrite, SerializableRead, Serializa
     public void readValues(DataRead dr) throws BasicException {
         lines = (Set<CouponLine>) dr.getObject(1);
     }
+    
+    public Set<CouponLine> getLines() {
+        return lines;
+    }
+    
 }
