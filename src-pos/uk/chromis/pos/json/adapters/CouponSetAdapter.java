@@ -7,6 +7,7 @@ package uk.chromis.pos.json.adapters;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
@@ -27,6 +28,10 @@ public class CouponSetAdapter extends BaseAdapter<CouponSet> {
     
     @Override
     public JsonElement serialize(CouponSet set, Type type, JsonSerializationContext context) {
+        if (set == null) {
+            return JsonNull.INSTANCE;
+        }
+        
         JsonObject object = new JsonObject();
         
         object.add(LINES_PROPERTY, context.serialize(set.getLines()));
@@ -36,6 +41,10 @@ public class CouponSetAdapter extends BaseAdapter<CouponSet> {
 
     @Override
     public CouponSet deserialize(JsonElement element, Type type, JsonDeserializationContext context) throws JsonParseException {
+        if (element.isJsonNull()) {
+            return null;
+        }
+        
         JsonObjectWrapper wrapper = new JsonObjectWrapper(element, context);
         
         CouponSet set = new CouponSet(

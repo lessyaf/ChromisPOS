@@ -7,6 +7,7 @@ package uk.chromis.pos.json.adapters;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
@@ -31,6 +32,10 @@ public class PaymentInfoMagcardRefundAdapter extends BaseAdapter<PaymentInfoMagc
     
     @Override
     public JsonElement serialize(PaymentInfoMagcardRefund payment, Type type, JsonSerializationContext context) {
+        if (payment == null) {
+            return JsonNull.INSTANCE;
+        }
+        
         JsonObject object = new JsonObject();
         
         object.addProperty(PaymentInfoAdapter.TYPE_PROPERTY, PaymentInfoMagcardRefund.class.getSimpleName());
@@ -48,6 +53,10 @@ public class PaymentInfoMagcardRefundAdapter extends BaseAdapter<PaymentInfoMagc
 
     @Override
     public PaymentInfoMagcardRefund deserialize(JsonElement element, Type type, JsonDeserializationContext context) throws JsonParseException {
+        if (element.isJsonNull()) {
+            return null;
+        }
+        
         JsonObjectWrapper wrapper = new JsonObjectWrapper(element, context);
         
         PaymentInfoMagcardRefund payment = new PaymentInfoMagcardRefund(

@@ -7,6 +7,7 @@ package uk.chromis.pos.json.adapters;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
@@ -25,6 +26,10 @@ public class UserInfoAdapter extends BaseAdapter<UserInfo> {
     
     @Override
     public JsonElement serialize(UserInfo user, Type type, JsonSerializationContext context) {
+        if (user == null) {
+            return JsonNull.INSTANCE;
+        }
+        
         JsonObject object = new JsonObject();
         
         object.addProperty(ID_PROPERTY, user.getId());
@@ -35,6 +40,10 @@ public class UserInfoAdapter extends BaseAdapter<UserInfo> {
 
     @Override
     public UserInfo deserialize(JsonElement element, Type type, JsonDeserializationContext context) throws JsonParseException {
+        if (element.isJsonNull()) {
+            return null;
+        }
+        
         JsonObjectWrapper wrapper = new JsonObjectWrapper(element, context);
         
         UserInfo user = new UserInfo(

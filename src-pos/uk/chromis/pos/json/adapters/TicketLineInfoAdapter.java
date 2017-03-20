@@ -7,6 +7,7 @@ package uk.chromis.pos.json.adapters;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
@@ -36,6 +37,10 @@ public class TicketLineInfoAdapter extends BaseAdapter<TicketLineInfo> {
     
     @Override
     public JsonElement serialize(TicketLineInfo line, Type type, JsonSerializationContext context) {
+        if (line == null) {
+            return JsonNull.INSTANCE;
+        }
+        
         JsonObject object = new JsonObject();
         
         object.addProperty(TICKET_PROPERTY, line.getTicket());
@@ -55,6 +60,10 @@ public class TicketLineInfoAdapter extends BaseAdapter<TicketLineInfo> {
 
     @Override
     public TicketLineInfo deserialize(JsonElement element, Type type, JsonDeserializationContext context) throws JsonParseException {
+        if (element.isJsonNull()) {
+            return null;
+        }
+        
         JsonObjectWrapper wrapper = new JsonObjectWrapper(element, context);
         
         TicketLineInfo line = new TicketLineInfo();

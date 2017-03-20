@@ -7,6 +7,7 @@ package uk.chromis.pos.json.adapters;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
@@ -26,6 +27,10 @@ public class PaymentInfoTicketAdapter extends BaseAdapter<PaymentInfoTicket> {
     
     @Override
     public JsonElement serialize(PaymentInfoTicket payment, Type type, JsonSerializationContext context) {
+        if (payment == null) {
+            return JsonNull.INSTANCE;
+        }
+        
         JsonObject object = new JsonObject();
         
         object.addProperty(PaymentInfoAdapter.TYPE_PROPERTY, PaymentInfoTicket.class.getSimpleName());
@@ -38,6 +43,10 @@ public class PaymentInfoTicketAdapter extends BaseAdapter<PaymentInfoTicket> {
 
     @Override
     public PaymentInfoTicket deserialize(JsonElement element, Type type, JsonDeserializationContext context) throws JsonParseException {
+        if (element.isJsonNull()) {
+            return null;
+        }
+        
         JsonObjectWrapper wrapper = new JsonObjectWrapper(element, context);
         
         PaymentInfoTicket payment = new PaymentInfoTicket(

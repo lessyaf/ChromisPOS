@@ -7,6 +7,7 @@ package uk.chromis.pos.json.adapters;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
@@ -24,6 +25,10 @@ public class PaymentInfoFreeAdapter extends BaseAdapter<PaymentInfoFree> {
     
     @Override
     public JsonElement serialize(PaymentInfoFree payment, Type type, JsonSerializationContext context) {
+        if (payment == null) {
+            return JsonNull.INSTANCE;
+        }
+        
         JsonObject object = new JsonObject();
         
         object.addProperty(PaymentInfoAdapter.TYPE_PROPERTY, PaymentInfoFree.class.getSimpleName());
@@ -34,6 +39,10 @@ public class PaymentInfoFreeAdapter extends BaseAdapter<PaymentInfoFree> {
 
     @Override
     public PaymentInfoFree deserialize(JsonElement element, Type type, JsonDeserializationContext context) throws JsonParseException {
+        if (element.isJsonNull()) {
+            return null;
+        }
+        
         JsonObjectWrapper wrapper = new JsonObjectWrapper(element, context);
         
         PaymentInfoFree payment = new PaymentInfoFree(
