@@ -30,26 +30,51 @@ public class JsonObjectWrapper {
     
     public String getString(String name) {
         JsonElement element = object.get(name);
+        
+        if (element == null) {
+            return null;
+        }
+        
         return element.isJsonNull() ? null : element.getAsString();
     }
     
     public Boolean getBoolean(String name) {
         JsonElement element = object.get(name);
+        
+        if (element == null) {
+            return null;
+        }
+        
         return element.isJsonNull() ? null : element.getAsBoolean();
     }
     
     public Double getDouble(String name) {
         JsonElement element = object.get(name);
+        
+        if (element == null) {
+            return null;
+        }
+        
         return element.isJsonNull() ? null : element.getAsDouble();
     }
     
     public Integer getInteger(String name) {
         JsonElement element = object.get(name);
+        
+        if (element == null) {
+            return null;
+        }
+        
         return element.isJsonNull() ? null : element.getAsInt();
     }
     
     public <T extends Object> T getObject(String name, Type type) {
         JsonElement element = object.get(name);
+        
+        if (element == null) {
+            return null;
+        }
+        
         return context.deserialize(element, type);
     }
     
