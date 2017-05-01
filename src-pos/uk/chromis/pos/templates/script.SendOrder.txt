@@ -1,54 +1,80 @@
 // script.SendOrder.txt
 // Sends an item in a Sale to a remote (Kitchen) Printer
-//
-//   Chromis POS - The New Face of Open Source POS 
-//   Copyright (c) (c) 2015-2016Chromis , previous uniCenta & Openbravo POS works   
-//
-//   This file is part of chromis oPOS
-//
-//   Chromis POS is free software: you can redistribute it and/or modify
-//   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation, either version 3 of the License, or
-//   (at your option) any later version.
-//
-//   Chromis POS is distributed in the hope that it will be useful,
-//   but WITHOUT ANY WARRANTY; without even the implied warranty of
-//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//   GNU General Public License for more details.
-//
-//   You should have received a copy of the GNU General Public License
-//   along with Chromis POS.  If not, see <http://www.gnu.org/licenses/>.
 // **************************************************************************
 
-boolean kitchen = false;
+int maxDestinations = 2;
 
-if ( ! ticket.getTicketType().toString().equals("REFUND") ) { 
-for(int i= 0; i < ticket.getLinesCount(); i++){
-	line = ticket.getLine(i);
+boolean[] hasProducts = new boolean[maxDestinations];
 
-	if (line.isProductKitchen() && (line.getProperty("sendstatus") == null)){
-		line.setProperty("sendstatus", "No");
-	}
-	if((line.isProductKitchen()) && (line.getProperty("sendstatus").equals("No"))){
-		kitchen = true;
-	}
+boolean[] hasProductsCancelled = new boolean[maxDestinations];
+
+String[] destinationsNames = new String[] {
+    "Kitchen",
+    "Bar"
+};
+
+String[] destinationsTicket = new String[] {
+    "Printer.TicketKitchen",
+    "Printer.TicketBar"
+};
+
+String[] destinationsTicketChange = new String[] {
+    "Printer.TicketChange_Kitchen",
+    "Printer.TicketChange_Bar"
+};
+ 
+for (int i= 0; i < ticket.getLinesCount(); i++) {
+    line = ticket.getLine(i);
+ 
+    line.prepareDestinationProperties();
+
+    for (int j = 0; j < maxDestinations; j++) {
+        if (line.isFromDestination(destinationsNames[j])) {
+            if (!line.isSent()) {
+                hasProducts[j] = true;
+            } else if (line.isCancelled()) {
+                hasProductsCancelled[j] = true;
+            }
+            break;
+        }
+    }
 }
 
-if (kitchen) {
-	sales.printTicket("Printer.TicketKitchen");
+boolean hasProducts2 = false;
+boolean hasProductsCancelled2 = false;
+
+for (int i = 0; i < maxDestinations; i++) {
+    if ((hasProductsCancelled[i] && hasProducts[i]) || (hasProductsCancelled[i] && !hasProducts[i])) {
+        sales.printTicket(destinationsTicketChange[i]);
+    }
+
+    if (hasProducts[i] && !hasProductsCancelled[i]) {
+        sales.printTicket(destinationsTicket[i]);
+    }
+
+    hasProducts2 = hasProducts2 || hasProducts[i];
+    hasProductsCancelled2 = hasProductsCancelled2 || hasProductsCancelled[i];
 }
-if (kitchen){
-	javax.swing.JOptionPane.showMessageDialog(null, "Order sent to Kitchen");
+
+if (hasProducts2) {
+    javax.swing.JOptionPane.showMessageDialog(null, "Your order has been sent"); 
+} else if (hasProductsCancelled2) {
+    javax.swing.JOptionPane.showMessageDialog(null, "Your order with cancelled products has been sent"); 
 } else {
-	javax.swing.JOptionPane.showMessageDialog(null, "Nothing to Send", "Warning", JOptionPane.WARNING_MESSAGE);
+    javax.swing.JOptionPane.showMessageDialog(null, "Nothing to send", "Warning", JOptionPane.WARNING_MESSAGE);
 }
 
-for(int i = ticket.getLinesCount()-1; i>= 0 ; i--){
-	line = ticket.getLine(i);
-	String a = line.getProperty("sendstatus");
-	
-	if((line.isProductKitchen()) && (line.getProperty("sendstatus").equals("No"))){
-		line.setProperty("sendstatus", "OK");
-	}
-}
+for (int i = ticket.getLinesCount() - 1; i >= 0; i--) {
+    line = ticket.getLine(i);
+
+    for (int j = 0; j < maxDestinations; j++) {
+        if (line.isFromDestination(destinationsNames[j]) && !line.isSent()) {
+            line.setSent(true);
+            break;
+        }
+    }
+
+    if (line.isCancelled()) {
+        ticket.removeLine(i);
+    }
 }

@@ -511,4 +511,38 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 
     void incMultiply() {
     }
+    
+    public void prepareDestinationProperties() {
+        if (attributes.getProperty("printkb") == null) {
+            attributes.setProperty("printkb", "N/A");
+        }
+        
+        if (attributes.getProperty("sendstatus") == null) {
+            attributes.setProperty("sendstatus", "No");
+        }
+    }
+    
+    public boolean isFromDestination(String destination) {
+        if (destination == null) {
+            destination = "";
+        }
+        return destination.equals(attributes.getProperty("printkb"));
+    }
+    
+    public boolean isSent() {
+        return "Yes".equals(attributes.getProperty("sendstatus"));
+    }
+    
+    public boolean isCancelled() {
+        return "Cancel".equals(attributes.getProperty("sendstatus"));
+    }
+    
+    public void setSent(boolean value) {
+        attributes.setProperty("sendstatus", value ? "Yes" : "No");
+    }
+    
+    public void setCancelled(boolean value) {
+        attributes.setProperty("sendstatus", value ? "Cancel" : "No");
+    }
+    
 }

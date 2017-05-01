@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import uk.chromis.basic.BasicException;
 import uk.chromis.data.loader.DataRead;
 import uk.chromis.data.loader.LocalRes;
@@ -614,6 +615,30 @@ public final class TicketInfo implements SerializableRead, Externalizable {
 
     public List<TicketLineInfo> getLines() {
         return m_aLines;
+    }
+    
+    public List<TicketLineInfo> getLinesFromDestination(String printkb) {        
+        if (printkb == null) {
+            printkb = "";
+        }
+        
+        String destination = printkb;
+        
+        return m_aLines.stream()
+                .filter(line -> line.isFromDestination(destination) && !line.isSent())
+                .collect(Collectors.toList());
+    }
+    
+    public List<TicketLineInfo> getCancelledLinesFromDestination(String printkb) {        
+        if (printkb == null) {
+            printkb = "";
+        }
+        
+        String destination = printkb;
+        
+        return m_aLines.stream()
+                .filter(line -> line.isFromDestination(destination) && (!line.isSent() || line.isCancelled()))
+                .collect(Collectors.toList());
     }
 
     public void setLines(List<TicketLineInfo> l) {

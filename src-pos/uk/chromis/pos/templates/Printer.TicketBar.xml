@@ -23,7 +23,7 @@
 
     <display>
         <line>
-            <text align="left" length="10">Order sent to Kitchen</text>
+            <text align="left" length="10">Order sent to Bar</text>
             <text align="right" length="10">${ticket.printTotal()}</text>
         </line>
         <line>
@@ -35,7 +35,7 @@
         <line></line>
         <line></line>
         <line size = "1">
-            <text bold = "true" align="center" length="42">Kitchen Order</text>
+            <text bold = "true" align="center" length="42">Bar Order</text>
         </line>
         <line></line>
         <line>
@@ -76,7 +76,7 @@
         <line>
             <text>------------------------------------------</text>
         </line>
-        #foreach ($ticketline in $ticket.getLinesFromDestination("Kitchen"))
+        #foreach ($ticketline in $ticket.getLinesFromDestination("Bar"))
         <line size = "1">
             <text align ="left" length="5">${ticketline.printMultiply()}x</text>
             #if ($ticketline.isProductCom())
