@@ -259,6 +259,8 @@ public class JPanelConfigPeripheral extends javax.swing.JPanel implements PanelC
         jcboSerialDisplay.addItem("COM11");
         jcboSerialDisplay.addItem("COM12");
         jcboSerialDisplay.addItem("LPT1");
+        jcboSerialDisplay.addItem("LPT2");
+        jcboSerialDisplay.addItem("LPT3");
         jcboSerialDisplay.addItem("/dev/ttyS0");
         jcboSerialDisplay.addItem("/dev/ttyS1");
         jcboSerialDisplay.addItem("/dev/ttyS2");
@@ -752,6 +754,8 @@ public class JPanelConfigPeripheral extends javax.swing.JPanel implements PanelC
         comboBox.addItem("COM12");
 
         comboBox.addItem("LPT1");
+        comboBox.addItem("LPT2");
+        comboBox.addItem("LPT3");
         comboBox.addItem("/dev/ttyS0");
         comboBox.addItem("/dev/ttyS1");
         comboBox.addItem("/dev/ttyS2");

@@ -1623,13 +1623,30 @@
             <column name="RESTYPE" valueNumeric="0"/>
             <column name="CONTENT" valueBlobResource="/uk/chromis/pos/templates/Display.Message.xml"/>
         </insert>
-        
         <insert tableName="RESOURCES">
             <column name="ID" value="73"/>
             <column name="NAME" value="Ticket.CloseTimer"/>
             <column name="RESTYPE" valueNumeric="0"/>
             <column name="CONTENT" valueBlobResource="/uk/chromis/pos/templates/Ticket.CloseTimer.xml"/>
         </insert> 
+        <insert tableName="RESOURCES">
+            <column name="ID" value="74"/>
+            <column name="NAME" value="Printer.TicketBar"/>
+            <column name="RESTYPE" valueNumeric="0"/>
+            <column name="CONTENT" valueBlobResource="/uk/chromis/pos/templates/Printer.TicketBar.xml"/>
+        </insert>
+        <insert tableName="RESOURCES">
+            <column name="ID" value="75"/>
+            <column name="NAME" value="Printer.TicketChange_Bar"/>
+            <column name="RESTYPE" valueNumeric="0"/>
+            <column name="CONTENT" valueBlobResource="/uk/chromis/pos/templates/Printer.TicketChange_Bar.xml"/>
+        </insert>       
+        <insert tableName="RESOURCES">
+            <column name="ID" value="76"/>
+            <column name="NAME" value="Printer.TicketChange_Kitchen"/>
+            <column name="RESTYPE" valueNumeric="0"/>
+            <column name="CONTENT" valueBlobResource="/uk/chromis/pos/templates/Printer.TicketChange_Kitchen.xml"/>
+        </insert>  
         
         <insert tableName="RESOURCES">
             <column name="ID" value="6700"/>
