@@ -22,7 +22,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import uk.chromis.basic.BasicException;
 import uk.chromis.data.loader.DataRead;
 import uk.chromis.data.loader.DataWrite;
@@ -526,7 +529,18 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
         if (destination == null) {
             destination = "";
         }
-        return destination.equals(attributes.getProperty("printkb"));
+        
+        String printkb = attributes.getProperty("printkb", null);
+        
+        if (printkb == null) {
+            return false;
+        }
+        
+        List<String> destinations = Stream.of(printkb.split(","))
+                .map(item -> item.trim())
+                .collect(Collectors.toList());
+        
+        return destinations.contains(destination);
     }
     
     public boolean isSent() {
