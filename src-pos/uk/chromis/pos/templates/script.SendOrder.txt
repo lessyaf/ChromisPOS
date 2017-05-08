@@ -30,12 +30,11 @@ for (int i= 0; i < ticket.getLinesCount(); i++) {
 
     for (int j = 0; j < maxDestinations; j++) {
         if (line.isFromDestination(destinationsNames[j])) {
-            if (!line.isSent()) {
-                hasProducts[j] = true;
-            } else if (line.isCancelled()) {
+            if (line.isCancelled()) {
                 hasProductsCancelled[j] = true;
+            } else if (!line.isSent()) {
+                hasProducts[j] = true;
             }
-            break;
         }
     }
 }
@@ -67,14 +66,14 @@ if (hasProducts2) {
 for (int i = ticket.getLinesCount() - 1; i >= 0; i--) {
     line = ticket.getLine(i);
 
+    if (line.isCancelled()) {
+        ticket.removeLine(i);
+        continue;
+    }
+
     for (int j = 0; j < maxDestinations; j++) {
         if (line.isFromDestination(destinationsNames[j]) && !line.isSent()) {
             line.setSent(true);
-            break;
         }
-    }
-
-    if (line.isCancelled()) {
-        ticket.removeLine(i);
-    }
+    }    
 }

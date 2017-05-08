@@ -498,7 +498,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         return m_oTicket;
     }
 
-    private void refreshTicket() {
+    public void refreshTicket() {
 
         if (m_oTicket != null) {
             m_jDelete.setVisible(m_oTicket.getTicketType() != TicketType.REFUND);
