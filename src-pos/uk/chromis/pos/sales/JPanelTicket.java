@@ -30,14 +30,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import static java.lang.Integer.parseInt;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.print.PrintService;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -1552,6 +1557,34 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
     private boolean closeTicket(TicketInfo ticket, Object ticketext) {
         AutoLogoff.getInstance().deactivateTimer();
+        
+        for (TicketInfo diner : getDinersTickets(ticket)) {
+            if (!closeTicketInternal(diner, ticketext)) {
+                return false;
+            }
+        }
+        
+        // if restaurant clear any customer name in table for this table once receipt is printed
+        if ("restaurant".equals(AppConfig.getInstance().getProperty("machine.ticketsbag")) && !ticket.getOldTicket()) {
+            restDB.clearCustomerNameInTable(ticketext.toString());
+            restDB.clearWaiterNameInTable(ticketext.toString());
+            restDB.clearTicketIdInTable(ticketext.toString());
+            restDB.clearTableLockByName(ticketext.toString());
+        }
+
+        // reset the payment info
+        m_oTicket.resetTaxes();
+        m_oTicket.resetPayments();
+
+        // cancelled the ticket.total script
+        // or canceled the payment dialog
+        // or canceled the ticket.close script
+        AutoLogoff.getInstance().activateTimer();
+        
+        return true;
+    }
+    
+    private boolean closeTicketInternal(TicketInfo ticket, Object ticketext) {
         boolean resultok = false;
 
         if (m_App.getAppUserView().getUser().hasPermission("sales.Total")) {
@@ -1621,23 +1654,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                             executeEvent(ticket, ticketext, "ticket.close", new ScriptArg("print", paymentdialog.isPrintSelected()));
 
                             printTicket(paymentdialog.isPrintSelected() || warrantyPrint
-                                    ? "Printer.Ticket"
-                                    : "Printer.Ticket2", ticket, ticketext);
-
-//                            if (m_oTicket.getLoyaltyCardNumber() != null){
-// add points to the card
-//                                System.out.println("Point added to card = " + ticket.getTotal()/100);
-// reset card pointer                                
-                            //  loyaltyCardNumber = null;
-//                            }
+                                        ? "Printer.Ticket"
+                                        : "Printer.Ticket2", ticket, ticketext);
+                            
                             resultok = true;
-// if restaurant clear any customer name in table for this table once receipt is printed
-                            if ("restaurant".equals(AppConfig.getInstance().getProperty("machine.ticketsbag")) && !ticket.getOldTicket()) {
-                                restDB.clearCustomerNameInTable(ticketext.toString());
-                                restDB.clearWaiterNameInTable(ticketext.toString());
-                                restDB.clearTicketIdInTable(ticketext.toString());
-                                restDB.clearTableLockByName(ticketext.toString());
-                            }
                         }
                     }
                 }
@@ -1646,17 +1666,41 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 msg.show(this);
                 resultok = false;
             }
-
-            // reset the payment info
-            m_oTicket.resetTaxes();
-            m_oTicket.resetPayments();
         }
-
-        // cancelled the ticket.total script
-        // or canceled the payment dialog
-        // or canceled the ticket.close script
-        AutoLogoff.getInstance().activateTimer();
+        
         return resultok;
+    }
+    
+    private List<TicketInfo> getDinersTickets(TicketInfo source) {
+        Set<String> numbers = source.getLines()
+                .stream()
+                .map(line -> line.getProperty("product.dinernumber"))
+                .collect(Collectors.toSet());
+        
+        if (numbers.size() == 1) {
+            return Collections.singletonList(source);
+        }
+        
+        List<TicketInfo> tickets = numbers
+                .stream()
+                .map(number -> {
+                    List<TicketLineInfo> lines = source.getLines()
+                            .stream()
+                            .filter(line -> {
+                                String value = line.getProperty("product.dinernumber");
+                                return number == null ? value == null : number.equals(value);
+                            })
+                            .collect(Collectors.toList());
+                    
+                    TicketInfo ticket = source.copyTicket();
+                    ticket.setLines(lines);
+                    ticket.refreshLines();
+                    
+                    return ticket;
+                })
+                .collect(Collectors.toList());
+        
+        return tickets;
     }
 
     private boolean checkVoucherCurrentTicket(String voucher) {
