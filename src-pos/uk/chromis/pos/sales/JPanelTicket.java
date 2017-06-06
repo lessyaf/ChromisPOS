@@ -33,9 +33,9 @@ import static java.lang.Integer.parseInt;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -624,6 +624,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
     protected void addTicketLine(TicketLineInfo oLine) {
         // read resource ticket.addline and exececute
         if (executeEventAndRefresh("ticket.addline", new ScriptArg("line", oLine)) == null) {
+            oLine.setProperty("product.dinernumber", m_oTicket.getProperty("ticket.activediner"));
+            
             if (oLine.isProductCom()) {
                 // Comentario entonces donde se pueda
                 int i = m_ticketlines.getSelectedIndex();
@@ -1555,17 +1557,19 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         }
     }
 
-    private boolean closeTicket(TicketInfo ticket, Object ticketext) {
+    private boolean closeTicket(TicketInfo source, Object ticketext) {
         AutoLogoff.getInstance().deactivateTimer();
         
-        for (TicketInfo diner : getDinersTickets(ticket)) {
-            if (!closeTicketInternal(diner, ticketext)) {
+        Map<String, TicketInfo> tickets = getDinersTickets(source);
+        
+        for (Entry<String, TicketInfo> entry : tickets.entrySet()) {
+            if (!closeTicketInternal(entry.getValue(), ticketext)) {
                 return false;
             }
         }
         
         // if restaurant clear any customer name in table for this table once receipt is printed
-        if ("restaurant".equals(AppConfig.getInstance().getProperty("machine.ticketsbag")) && !ticket.getOldTicket()) {
+        if ("restaurant".equals(AppConfig.getInstance().getProperty("machine.ticketsbag")) && !source.getOldTicket()) {
             restDB.clearCustomerNameInTable(ticketext.toString());
             restDB.clearWaiterNameInTable(ticketext.toString());
             restDB.clearTicketIdInTable(ticketext.toString());
@@ -1671,17 +1675,17 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         return resultok;
     }
     
-    private List<TicketInfo> getDinersTickets(TicketInfo source) {
+    private Map<String, TicketInfo> getDinersTickets(TicketInfo source) {
         Set<String> numbers = source.getLines()
                 .stream()
                 .map(line -> line.getProperty("product.dinernumber"))
                 .collect(Collectors.toSet());
         
         if (numbers.size() == 1) {
-            return Collections.singletonList(source);
+            return Collections.singletonMap(numbers.iterator().next(), source);
         }
         
-        List<TicketInfo> tickets = numbers
+        Map<String, TicketInfo> tickets = numbers
                 .stream()
                 .map(number -> {
                     List<TicketLineInfo> lines = source.getLines()
@@ -1696,9 +1700,11 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                     ticket.setLines(lines);
                     ticket.refreshLines();
                     
-                    return ticket;
+                    return new Object[] { number, ticket };
                 })
-                .collect(Collectors.toList());
+                .collect(Collectors.toMap(
+                        item -> (String) item[0], 
+                        item -> (TicketInfo) item[1]));
         
         return tickets;
     }

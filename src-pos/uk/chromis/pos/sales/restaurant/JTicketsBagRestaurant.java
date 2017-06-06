@@ -21,10 +21,17 @@ package uk.chromis.pos.sales.restaurant;
 
 import bsh.EvalError;
 import bsh.Interpreter;
+import java.awt.Dimension;
+import java.awt.event.ItemEvent;
 import java.util.List;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
+import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import uk.chromis.data.gui.JMessageDialog;
 import uk.chromis.data.gui.ListKeyed;
 import uk.chromis.data.gui.MessageInf;
@@ -95,7 +102,7 @@ public class JTicketsBagRestaurant extends javax.swing.JPanel {
         m_TTP2 = new TicketParser(m_App.getDeviceTicket(), m_dlSystem);
         m_KitchenPrint.setVisible(m_App.getAppUserView().getUser().hasPermission("sales.PrintKitchen"));
         m_KitchenPrint.setVisible(false);
-
+        
     }
 
     /**
@@ -128,6 +135,39 @@ public class JTicketsBagRestaurant extends javax.swing.JPanel {
             }
         }
     }
+    
+    public void updateDinersList() {
+        ResourceBundle bundle = ResourceBundle.getBundle("pos_messages");
+        
+        TicketInfo ticket = m_restaurant.getActiveTicket();
+        
+        if (ticket.getProperty("ticket.activediner") == null) {
+            ticket.setProperty("ticket.activediner", "1");
+        }
+        
+        if (ticket.getProperty("ticket.dinerscount") == null) {
+            ticket.setProperty("ticket.dinerscount", "1");
+        }
+        
+        String activeDiner = ticket.getProperty("ticket.activediner");
+        int dinersCount = Integer.parseInt(ticket.getProperty("ticket.dinerscount"));
+        
+        List<String> numbers = IntStream.rangeClosed(1, dinersCount)
+                .boxed()
+                .map(String::valueOf)
+                .collect(Collectors.toList());
+        
+        numbers.add(0, bundle.getString("label.adddiner"));
+        
+        DefaultComboBoxModel model = new DefaultComboBoxModel(numbers.stream().toArray(String[]::new));
+        model.setSelectedItem(activeDiner);
+        
+        BasicComboBoxRenderer renderer = new BasicComboBoxRenderer();
+        renderer.setPreferredSize(new Dimension(100, 50));
+                
+        m_ActiveDiner.setModel(model);
+        m_ActiveDiner.setRenderer(renderer);
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -141,6 +181,7 @@ public class JTicketsBagRestaurant extends javax.swing.JPanel {
         m_MoveTable = new javax.swing.JButton();
         m_TablePlan = new javax.swing.JButton();
         m_KitchenPrint = new javax.swing.JButton();
+        m_ActiveDiner = new javax.swing.JComboBox<>();
 
         setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
         setMinimumSize(new java.awt.Dimension(250, 50));
@@ -208,6 +249,17 @@ public class JTicketsBagRestaurant extends javax.swing.JPanel {
             }
         });
         add(m_KitchenPrint);
+
+        m_ActiveDiner.setToolTipText(bundle.getString("tiptext.activediner")); // NOI18N
+        m_ActiveDiner.setMaximumSize(new java.awt.Dimension(50, 40));
+        m_ActiveDiner.setMinimumSize(new java.awt.Dimension(50, 40));
+        m_ActiveDiner.setPreferredSize(new java.awt.Dimension(52, 40));
+        m_ActiveDiner.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                m_ActiveDinerItemStateChanged(evt);
+            }
+        });
+        add(m_ActiveDiner);
     }// </editor-fold>//GEN-END:initComponents
 
     private void m_MoveTableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_MoveTableActionPerformed
@@ -264,10 +316,29 @@ public class JTicketsBagRestaurant extends javax.swing.JPanel {
                 }
             }
 
+        }
     }//GEN-LAST:event_m_KitchenPrintActionPerformed
-    }
 
+    private void m_ActiveDinerItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_m_ActiveDinerItemStateChanged
+        if (ItemEvent.SELECTED == evt.getStateChange()) {
+            TicketInfo ticket = m_restaurant.getActiveTicket();
+            
+            String item = (String) m_ActiveDiner.getSelectedItem();
+            int index = m_ActiveDiner.getSelectedIndex();
+            
+            if (index == 0) {
+                int dinersCount = Integer.parseInt(ticket.getProperty("ticket.dinerscount")) + 1;
+                ticket.setProperty("ticket.dinerscount", String.valueOf(dinersCount));
+                ticket.setProperty("ticket.activediner", String.valueOf(dinersCount));
+                updateDinersList();
+            } else {
+                ticket.setProperty("ticket.activediner", item);
+            }
+        }
+    }//GEN-LAST:event_m_ActiveDinerItemStateChanged
+	
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JComboBox<String> m_ActiveDiner;
     private javax.swing.JButton m_DelTicket;
     private javax.swing.JButton m_KitchenPrint;
     private javax.swing.JButton m_MoveTable;
