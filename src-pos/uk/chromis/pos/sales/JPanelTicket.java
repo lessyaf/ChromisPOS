@@ -132,6 +132,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
     protected DataLogicPromotions dlPromotions;
     protected Object m_oTicketExt;
     protected TicketsEditor m_panelticket;
+    protected String m_ActiveDiner;
     private int m_iNumberStatus;
     private int m_iNumberStatusInput;
     private int m_iNumberStatusPor;
@@ -491,6 +492,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 Logger.getLogger(JPanelTicket.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        
+        m_ActiveDiner = oTicket != null ? oTicket.getProperty("ticket.activediner", "1") : null;
 
         // read resources ticket.show and execute
         executeEvent(m_oTicket, m_oTicketExt, "ticket.show");
@@ -532,8 +535,14 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             }
 
         } else {
+            List<TicketLineInfo> lines = m_oTicket.getLines()
+                    .stream()
+                    .filter(line -> m_ActiveDiner.equals(line.getProperty("product.dinernumber")))
+                    .collect(Collectors.toList());
+            
             btnSplit.setEnabled(false);
             btnSplit.setEnabled(m_App.getAppUserView().getUser().hasPermission("sales.Total") && (m_oTicket.getArticlesCount()) > 1);
+            
             if (m_oTicket.getTicketType().equals(TicketType.REFUND)) {
                 //Make disable Search and Edit Buttons
                 m_jNumberKey.justEquals();
@@ -543,7 +552,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             }
 
             // Refresh ticket taxes
-            for (TicketLineInfo line : m_oTicket.getLines()) {
+            for (TicketLineInfo line : lines) {
                 line.setTaxInfo(taxeslogic.getTaxInfo(line.getProductTaxCategoryID(), m_oTicket.getCustomer()));
             }
 
@@ -551,20 +560,23 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
             m_ticketlines.clearTicketLines();
 
-            for (int i = 0; i < m_oTicket.getLinesCount(); i++) {
-                m_ticketlines.addTicketLine(m_oTicket.getLine(i));
+            for (TicketLineInfo line : lines) {
+                m_ticketlines.addTicketLine(line);
             }
+            
             printPartialTotals();
             stateToZero();
 
             // Muestro el panel de tickets.
             cl.show(this, "ticket");
+            
             if (m_oTicket.getLinesCount() == 0) {
                 resetSouthComponent();
             }
 
             // activo el tecleador...
             m_jKeyFactory.setText(null);
+            
             java.awt.EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {
@@ -1690,10 +1702,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 .map(number -> {
                     List<TicketLineInfo> lines = source.getLines()
                             .stream()
-                            .filter(line -> {
-                                String value = line.getProperty("product.dinernumber");
-                                return number == null ? value == null : number.equals(value);
-                            })
+                            .filter(line -> number.equals(line.getProperty("product.dinernumber")))
                             .collect(Collectors.toList());
                     
                     TicketInfo ticket = source.copyTicket();

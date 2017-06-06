@@ -22,7 +22,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import uk.chromis.basic.BasicException;
@@ -30,7 +29,6 @@ import uk.chromis.pos.catalog.CatalogSelector;
 import uk.chromis.pos.catalog.JCatalog;
 import uk.chromis.pos.catalog.JCatalogFull;
 import uk.chromis.pos.forms.AppConfig;
-import uk.chromis.pos.forms.AppLocal;
 import uk.chromis.pos.forms.AppView;
 import uk.chromis.pos.ticket.ProductInfoExt;
 
@@ -131,6 +129,12 @@ public class JPanelTicketSales extends JPanelTicket {
         } catch (BasicException ex) {
         }
 
+    }
+
+    @Override
+    public void setActiveDiner(String diner) {
+        m_ActiveDiner = diner;
+        refreshTicket();
     }
 
     private class CatalogListener implements ActionListener {

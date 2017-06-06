@@ -40,4 +40,6 @@ public interface TicketsEditor {
      * @return
      */
     public TicketInfo getActiveTicket(); 
+    
+    public void setActiveDiner(String diner);
 }

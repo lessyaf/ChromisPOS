@@ -116,7 +116,12 @@ public class JPanelTicketEdits extends JPanelTicket {
     @Override
     protected void resetSouthComponent() {
     }
-      
+
+    @Override
+    public void setActiveDiner(String diner) {
+        
+    }
+    
     private class CatalogListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {

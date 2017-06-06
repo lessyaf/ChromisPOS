@@ -80,6 +80,12 @@ public class JTicketsBagRestaurant extends javax.swing.JPanel {
     private TaxesLogic taxeslogic;
 
     private Interpreter i;
+    
+    private OnActiveDinerChangedListener onActiveDinerChangedListener;
+    
+    public interface OnActiveDinerChangedListener {
+        void onActiveDinerChanged(String diner);
+    }
 
     /**
      * Creates new form JTicketsBagRestaurantMap
@@ -167,6 +173,10 @@ public class JTicketsBagRestaurant extends javax.swing.JPanel {
                 
         m_ActiveDiner.setModel(model);
         m_ActiveDiner.setRenderer(renderer);
+    }
+    
+    public void setOnActiveDinerChangedListener(OnActiveDinerChangedListener listener) {
+        onActiveDinerChangedListener = listener;
     }
 
     /**
@@ -323,16 +333,21 @@ public class JTicketsBagRestaurant extends javax.swing.JPanel {
         if (ItemEvent.SELECTED == evt.getStateChange()) {
             TicketInfo ticket = m_restaurant.getActiveTicket();
             
-            String item = (String) m_ActiveDiner.getSelectedItem();
+            String diner;
             int index = m_ActiveDiner.getSelectedIndex();
             
             if (index == 0) {
-                int dinersCount = Integer.parseInt(ticket.getProperty("ticket.dinerscount")) + 1;
-                ticket.setProperty("ticket.dinerscount", String.valueOf(dinersCount));
-                ticket.setProperty("ticket.activediner", String.valueOf(dinersCount));
+                diner = String.valueOf(Integer.parseInt(ticket.getProperty("ticket.dinerscount")) + 1);
+                ticket.setProperty("ticket.activediner", diner);
+                ticket.setProperty("ticket.dinerscount", diner);
                 updateDinersList();
             } else {
-                ticket.setProperty("ticket.activediner", item);
+                diner = (String) m_ActiveDiner.getSelectedItem();
+                ticket.setProperty("ticket.activediner", diner);
+            }
+            
+            if (onActiveDinerChangedListener != null) {
+                onActiveDinerChangedListener.onActiveDinerChanged(diner);
             }
         }
     }//GEN-LAST:event_m_ActiveDinerItemStateChanged
