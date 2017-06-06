@@ -636,7 +636,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
     protected void addTicketLine(TicketLineInfo oLine) {
         // read resource ticket.addline and exececute
         if (executeEventAndRefresh("ticket.addline", new ScriptArg("line", oLine)) == null) {
-            oLine.setProperty("product.dinernumber", m_oTicket.getProperty("ticket.activediner"));
+            oLine.setProperty("product.dinernumber", m_oTicket.getProperty("ticket.activediner", "1"));
             
             if (oLine.isProductCom()) {
                 // Comentario entonces donde se pueda
