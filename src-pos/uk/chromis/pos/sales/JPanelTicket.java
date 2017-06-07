@@ -29,13 +29,11 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import static java.lang.Integer.parseInt;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -880,7 +878,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 // Modify to allow number x with scanned products. JDL 8.8.(c) 2015-2016       
         int count = 1;
         if (sCode.contains("*")) {
-            count = (sCode.indexOf("*") == 0) ? 1 : parseInt(sCode.substring(0, sCode.indexOf("*")));
+            count = (sCode.indexOf("*") == 0) ? 1 : Integer.parseInt(sCode.substring(0, sCode.indexOf("*")));
             sCode = sCode.substring(sCode.indexOf("*") + 1, sCode.length());
         }
 
@@ -1573,9 +1571,25 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         AutoLogoff.getInstance().deactivateTimer();
         
         Map<String, TicketInfo> tickets = getDinersTickets(source);
+        int originalSize = tickets.size();
         
-        for (Entry<String, TicketInfo> entry : tickets.entrySet()) {
-            if (!closeTicketInternal(entry.getValue(), ticketext)) {
+        if (tickets.size() > 1) {
+            JDinersDialog dialog = new JDinersDialog(tickets);
+            dialog.setLocationRelativeTo(null);
+            dialog.setVisible(true);
+            
+            if (JDinersDialog.DinerSelectionResult.CANCEL == dialog.getResult()) {
+                return false;
+            }
+            
+            tickets = dialog.getTickets();
+        }
+        
+        int newSize = tickets.size();
+        boolean shouldRemoveDiner = originalSize != newSize;
+        
+        for (TicketInfo ticket : tickets.values()) {
+            if (!closeTicketInternal(ticket, ticketext)) {
                 return false;
             }
         }
