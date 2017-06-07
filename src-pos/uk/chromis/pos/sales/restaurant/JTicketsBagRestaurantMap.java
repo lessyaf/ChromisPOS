@@ -591,14 +591,12 @@ public class JTicketsBagRestaurantMap extends JTicketsBag {
 
     private void setActivePlace(Place place, TicketInfo ticket) {
         m_PlaceCurrent = place;
-        m_panelticket.setActiveTicket(ticket, m_PlaceCurrent.getName());
+        m_panelticket.setActiveTicket(ticket, m_PlaceCurrent.getName());        
+        m_restaurantmap.setOnActiveDinerChangedListener(diner -> m_panelticket.setActiveDiner(diner));
+    }
+    
+    public void updateDinersList() {
         m_restaurantmap.updateDinersList();
-        m_restaurantmap.setOnActiveDinerChangedListener(new JTicketsBagRestaurant.OnActiveDinerChangedListener() {
-            @Override
-            public void onActiveDinerChanged(String diner) {
-                m_panelticket.setActiveDiner(diner);
-            }
-        });
     }
 
     private void showView(String view) {

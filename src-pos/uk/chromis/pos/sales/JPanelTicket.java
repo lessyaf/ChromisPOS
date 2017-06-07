@@ -29,7 +29,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -101,6 +100,7 @@ import uk.chromis.pos.printer.DeviceDisplayAdvance;
 import uk.chromis.pos.ticket.TicketType;
 import uk.chromis.pos.promotion.DataLogicPromotions;
 import uk.chromis.pos.promotion.PromotionSupport;
+import uk.chromis.pos.sales.restaurant.JTicketsBagRestaurantMap;
 import uk.chromis.pos.util.AutoLogoff;
 import uk.chromis.pos.ticket.PlayWave;
 
@@ -505,10 +505,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
     }
 
     public void refreshTicket() {
-
         if (m_oTicket != null) {
             m_jDelete.setVisible(m_oTicket.getTicketType() != TicketType.REFUND);
         }
+        
         CardLayout cl = (CardLayout) (getLayout());
 
         m_promotionSupport.clearPromotionCache();
@@ -533,6 +533,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             }
 
         } else {
+            if (m_ticketsbag instanceof JTicketsBagRestaurantMap) {
+                ((JTicketsBagRestaurantMap) m_ticketsbag).updateDinersList();
+            }
+            
             List<TicketLineInfo> lines = m_oTicket.getLines()
                     .stream()
                     .filter(line -> m_ActiveDiner.equals(line.getProperty("product.dinernumber")))
@@ -587,7 +591,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
     public void setTicketName(String tName) {
         m_jTicketId.setText(tName);
     }
-
+    
     private void printPartialTotals() {
         if (m_oTicket.getLinesCount() == 0) {
             m_jSubtotalEuros.setText(null);
@@ -1571,10 +1575,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         AutoLogoff.getInstance().deactivateTimer();
         
         Map<String, TicketInfo> tickets = getDinersTickets(source);
-        int originalSize = tickets.size();
         
         if (tickets.size() > 1) {
-            JDinersDialog dialog = new JDinersDialog(tickets);
+            JDinersDialog dialog = new JDinersDialog(source, tickets);
             dialog.setLocationRelativeTo(null);
             dialog.setVisible(true);
             
@@ -1585,13 +1588,45 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             tickets = dialog.getTickets();
         }
         
-        int newSize = tickets.size();
-        boolean shouldRemoveDiner = originalSize != newSize;
+        tickets.values().forEach(TicketInfo::refreshLines);
         
-        for (TicketInfo ticket : tickets.values()) {
-            if (!closeTicketInternal(ticket, ticketext)) {
-                return false;
+        List<TicketLineInfo> lines = tickets.values()
+                .stream()
+                .filter(ticket -> closeTicketInternal(ticket, ticketext))
+                .flatMap(ticket -> ticket.getLines().stream())
+                .collect(Collectors.toList());
+        
+        source.getLines().removeAll(lines);
+        
+        if (source.getLinesCount() > 0) {
+            Set<String> numbers = source.getLines()
+                    .stream()
+                    .map(line -> line.getProperty("product.dinernumber"))
+                    .collect(Collectors.toSet());
+            
+            int[] index = {0};
+            
+            numbers.forEach(number -> {
+                index[0]++;
+                
+                source.getLines()
+                        .stream()
+                        .filter(line -> number.equals(line.getProperty("product.dinernumber")))
+                        .forEach(line -> line.setProperty("product.dinernumber", String.valueOf(index[0])));
+            });
+            
+            source.setProperty("ticket.activediner", "1");
+            source.setProperty("ticket.dinerscount", String.valueOf(numbers.size()));
+            
+            m_ActiveDiner = "1";
+            
+            try {
+                taxeslogic.calculateTaxes(source);
+            } catch (TaxesException e) {
+                e.printStackTrace();
             }
+            
+            return false;
         }
         
         // if restaurant clear any customer name in table for this table once receipt is printed
@@ -1707,10 +1742,6 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 .map(line -> line.getProperty("product.dinernumber"))
                 .collect(Collectors.toSet());
         
-        if (numbers.size() == 1) {
-            return Collections.singletonMap(numbers.iterator().next(), source);
-        }
-        
         Map<String, TicketInfo> tickets = numbers
                 .stream()
                 .map(number -> {
@@ -1721,7 +1752,6 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                     
                     TicketInfo ticket = source.copyTicket();
                     ticket.setLines(lines);
-                    ticket.refreshLines();
                     
                     return new Object[] { number, ticket };
                 })
