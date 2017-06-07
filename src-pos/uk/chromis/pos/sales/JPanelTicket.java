@@ -96,6 +96,7 @@ import net.sf.jasperreports.engine.data.JRMapArrayDataSource;
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
 import uk.chromis.data.gui.JMessageDialog;
+import uk.chromis.format.Formats;
 import uk.chromis.pos.printer.DeviceDisplayAdvance;
 import uk.chromis.pos.ticket.TicketType;
 import uk.chromis.pos.promotion.DataLogicPromotions;
@@ -491,7 +492,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             }
         }
         
-        m_ActiveDiner = oTicket != null ? oTicket.getProperty("ticket.activediner", "1") : null;
+        m_ActiveDiner = oTicket != null ? oTicket.getProperty("ticket.activediner", "1") : "1";
 
         // read resources ticket.show and execute
         executeEvent(m_oTicket, m_oTicketExt, "ticket.show");
@@ -599,9 +600,17 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             m_jTotalEuros.setText(null);
             repaint();
         } else {
-            m_jSubtotalEuros.setText(m_oTicket.printSubTotal());
-            m_jTaxesEuros.setText(m_oTicket.printTax());
-            m_jTotalEuros.setText(m_oTicket.printTotal());
+            List<TicketLineInfo> lines = m_oTicket.getLines()
+                    .stream()
+                    .filter(line -> m_ActiveDiner.equals(line.getProperty("product.dinernumber")))
+                    .collect(Collectors.toList());
+            
+            double subtotal = lines.stream().mapToDouble(line -> line.getSubValue()).sum();
+            double taxes = lines.stream().mapToDouble(line -> line.getTax()).sum();
+            
+            m_jSubtotalEuros.setText(Formats.CURRENCY.formatValue(subtotal));
+            m_jTaxesEuros.setText(Formats.CURRENCY.formatValue(taxes));
+            m_jTotalEuros.setText(Formats.CURRENCY.formatValue(subtotal + taxes));
         }
     }
 
