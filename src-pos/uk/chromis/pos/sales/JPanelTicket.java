@@ -518,6 +518,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             btnSplit.setEnabled(false);
             m_jTicketId.setText(null);
             m_ticketlines.clearTicketLines();
+            m_ticketlines.setOffset(0);
 
             m_jSubtotalEuros.setText(null);
             m_jTaxesEuros.setText(null);
@@ -562,10 +563,26 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             setTicketName(m_oTicket.getName(m_oTicketExt));
 
             m_ticketlines.clearTicketLines();
+            m_ticketlines.setOffset(0);
 
             for (TicketLineInfo line : lines) {
                 m_ticketlines.addTicketLine(line);
             }
+            
+            int activeDiner = Integer.parseInt(m_ActiveDiner);
+            int offset = 0;
+            
+            if (activeDiner > 1) {
+                offset = (int) m_oTicket.getLines()
+                        .stream()
+                        .filter(line -> {
+                            int number = Integer.parseInt(line.getProperty("product.dinernumber"));
+                            return number < activeDiner;
+                        })
+                        .count();
+            }
+            
+            m_ticketlines.setOffset(offset);
             
             printPartialTotals();
             stateToZero();
@@ -594,17 +611,17 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
     }
     
     private void printPartialTotals() {
-        if (m_oTicket.getLinesCount() == 0) {
+        List<TicketLineInfo> lines = m_oTicket.getLines()
+                .stream()
+                .filter(line -> m_ActiveDiner.equals(line.getProperty("product.dinernumber")))
+                .collect(Collectors.toList());
+        
+        if (lines.isEmpty()) {
             m_jSubtotalEuros.setText(null);
             m_jTaxesEuros.setText(null);
             m_jTotalEuros.setText(null);
             repaint();
         } else {
-            List<TicketLineInfo> lines = m_oTicket.getLines()
-                    .stream()
-                    .filter(line -> m_ActiveDiner.equals(line.getProperty("product.dinernumber")))
-                    .collect(Collectors.toList());
-            
             double subtotal = lines.stream().mapToDouble(line -> line.getSubValue()).sum();
             double taxes = lines.stream().mapToDouble(line -> line.getTax()).sum();
             
@@ -657,7 +674,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                     i++;
                 }
                 // me salto todos los productos auxiliares...                
-                while (i >= 0 && i < m_oTicket.getLinesCount() && m_oTicket.getLine(i).isProductCom()) {
+                while (i >= 0 && i < m_ticketlines.getRowCount() && m_oTicket.getLine(i).isProductCom()) {
                     i++;
                 }
                 if (i >= 0) {
@@ -799,14 +816,14 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                     m_oTicket.removeLine(i);
                     m_ticketlines.removeTicketLine(i);
                     // Remove discount lines
-                    while (i < m_oTicket.getLinesCount() && m_oTicket.getLine(i).isPromotionAdded()) {
+                    while (i < m_ticketlines.getRowCount()&& m_oTicket.getLine(i).isPromotionAdded()) {
                         m_oTicket.removeLine(i);
                         m_ticketlines.removeTicketLine(i);
                     }
                 } else {
                     m_oTicket.removeLine(i);
                     m_ticketlines.removeTicketLine(i);
-                    while (i < m_oTicket.getLinesCount() && m_oTicket.getLine(i).isProductCom()) {
+                    while (i < m_ticketlines.getRowCount() && m_oTicket.getLine(i).isProductCom()) {
                         m_oTicket.removeLine(i);
                         m_ticketlines.removeTicketLine(i);
                     }
@@ -2008,7 +2025,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
     public void updatePromotions(String eventkey, int effectedIndex, String productID) {
         try {
             int selectedIndex = m_ticketlines.getSelectedIndex();
-            if (selectedIndex >= m_oTicket.getLinesCount()) {
+            if (selectedIndex >= m_ticketlines.getRowCount()) {
                 // Selection is at the end of the list so we restore it to there afterwards
                 selectedIndex = 9999;
             }
@@ -2066,10 +2083,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
     }
 
     private void setSelectedIndex(int i) {
-        if (i >= 0 && i < m_oTicket.getLinesCount()) {
+        if (i >= 0 && i < m_ticketlines.getRowCount()) {
             m_ticketlines.setSelectedIndex(i);
-        } else if (m_oTicket.getLinesCount() > 0) {
-            m_ticketlines.setSelectedIndex(m_oTicket.getLinesCount() - 1);
+        } else if (m_ticketlines.getRowCount() > 0) {
+            m_ticketlines.setSelectedIndex(m_ticketlines.getRowCount() - 1);
 
         }
     }
@@ -2782,6 +2799,16 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
     private void m_jDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jDeleteActionPerformed
         int i = m_ticketlines.getSelectedIndex();
+        
+        if (i < 0) {
+            if (AppConfig.getInstance().getBoolean("till.customsounds")) {
+                new PlayWave("error.wav").start(); // playing WAVE file 
+            } else {
+                Toolkit.getDefaultToolkit().beep();
+            }
+            return;
+        }
+        
         if (m_oTicket.getLine(i).getProductID().equals("sc999-001")) {
             m_oTicket.setNoSC("1");
         }
@@ -2789,7 +2816,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         if ((m_oTicket.getTicketType().equals(TicketType.REFUND)) && (!m_oTicket.getLine(i).isProductCom())) {
             JRefundLines.addBackLine(m_oTicket.getLine(i).printName(), m_oTicket.getLine(i).getMultiply(), m_oTicket.getLine(i).getPrice(), m_oTicket.getLine(i).getProperty("orgLine"));
             removeTicketLine(i);
-            while (i < m_oTicket.getLinesCount() && m_oTicket.getLine(i).isProductCom()) {
+            while (i < m_ticketlines.getRowCount() && m_oTicket.getLine(i).isProductCom()) {
                 JRefundLines.addBackLine(m_oTicket.getLine(i).printName(), m_oTicket.getLine(i).getMultiply(), m_oTicket.getLine(i).getPrice(), m_oTicket.getLine(i).getProperty("orgLine"));
                 removeTicketLine(i);
             }
@@ -2798,12 +2825,6 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             JOptionPane.showMessageDialog(null,
                     AppLocal.getIntString("message.deleteauxiliaryitem"),
                     "auxiliary Item", JOptionPane.WARNING_MESSAGE);
-        } else if (i < 0) {
-            if (AppConfig.getInstance().getBoolean("till.customsounds")) {
-                new PlayWave("error.wav").start(); // playing WAVE file 
-            } else {
-                Toolkit.getDefaultToolkit().beep();
-            }
         } else {
             removeTicketLine(i); // elimino la linea           
         }

@@ -62,6 +62,7 @@ public class JTicketLines extends javax.swing.JPanel {
     
     private final TicketTableModel m_jTableModel;
     private Boolean sendStatus;
+    private int offset;
     
     /** Creates new form JLinesTicket
      * @param ticketline */
@@ -143,7 +144,7 @@ public class JTicketLines extends javax.swing.JPanel {
      * @param oLine
      */
     public void setTicketLine(int index, TicketLineInfo oLine){
-        
+        index = index - offset;
         m_jTableModel.setRow(index, oLine);  
     }
     
@@ -152,11 +153,11 @@ public class JTicketLines extends javax.swing.JPanel {
      * @param oLine
      */
     public void addTicketLine(TicketLineInfo oLine) {
-
+        
         m_jTableModel.addRow(oLine);
         
-        // Selecciono la que acabamos de anadir.            
-        setSelectedIndex(m_jTableModel.getRowCount() - 1);   
+        // Selecciono la que acabamos de anadir.         
+        setSelectedIndex(m_jTableModel.getRowCount() - 1);    
     }
 
     /**
@@ -165,7 +166,8 @@ public class JTicketLines extends javax.swing.JPanel {
      * @param oLine
      */
     public void insertTicketLine(int index, TicketLineInfo oLine) {
-
+        index = index - offset;
+        
         m_jTableModel.insertRow(index, oLine);
         
         // Selecciono la que acabamos de anadir.            
@@ -177,8 +179,9 @@ public class JTicketLines extends javax.swing.JPanel {
      * @param i
      */
     public void removeTicketLine(int i){
+        i = i - offset;
 
-        m_jTableModel.removeRow(i);
+        m_jTableModel.removeRow(i);       
 
         // Escojo una a seleccionar
         if (i >= m_jTableModel.getRowCount()) {
@@ -196,6 +199,9 @@ public class JTicketLines extends javax.swing.JPanel {
      * @param i
      */
     public void setSelectedIndex(int i){
+        if (i >= m_jTableModel.getRowCount()) {
+            i = i - offset;
+        }
         
         // Seleccionamos
         m_jTicketTable.getSelectionModel().setSelectionInterval(i, i);
@@ -210,7 +216,13 @@ public class JTicketLines extends javax.swing.JPanel {
      * @return
      */
     public int getSelectedIndex() {
-        return m_jTicketTable.getSelectionModel().getMinSelectionIndex(); // solo sera uno, luego no importa...
+        int index = m_jTicketTable.getSelectionModel().getMinSelectionIndex(); // solo sera uno, luego no importa...
+        
+        if (index == -1) {
+            return index;
+        }
+        
+        return index + offset;
     }
     
     /**
@@ -254,6 +266,14 @@ public class JTicketLines extends javax.swing.JPanel {
             // Solo seleccionamos si podemos.
             setSelectedIndex(i);
         }
+    }
+    
+    public int getRowCount() {
+        return m_jTableModel.getRowCount();
+    }
+    
+    public void setOffset(int offset) {
+        this.offset = offset;
     }
     
     private static class TicketCellRenderer extends DefaultTableCellRenderer {
