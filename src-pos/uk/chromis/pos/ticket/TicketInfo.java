@@ -516,7 +516,7 @@ public final class TicketInfo implements SerializableRead, Externalizable {
         refreshLines();
     }
 
-    private void refreshLines() {
+    public void refreshLines() {
         for (int i = 0; i < m_aLines.size(); i++) {
             getLine(i).setTicket(m_sId, i);
         }

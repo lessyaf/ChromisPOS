@@ -763,8 +763,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 if (m_oTicket.getLine(i).isProductCom()) {
                     m_oTicket.removeLine(i);
                     m_ticketlines.removeTicketLine(i);
-                }
-                if (m_oTicket.getLine(i).getPromotionId() != null) {
+                } else if (m_oTicket.getLine(i).getPromotionId() != null) {
                     // Check for promotion discounts added to the product
                     m_oTicket.removeLine(i);
                     m_ticketlines.removeTicketLine(i);
@@ -1585,6 +1584,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                         ticket.setUser(m_App.getAppUserView().getUser().getUserInfo()); // El usuario que lo cobra
                         ticket.setActiveCash(m_App.getActiveCashIndex());
                         ticket.setDate(new Date()); // Le pongo la fecha de cobro
+                        ticket.refreshLines();
 
                         //read resource ticket.save and execute
                         if (executeEvent(ticket, ticketext, "ticket.save") == null) {
@@ -2670,6 +2670,16 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
     private void m_jDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jDeleteActionPerformed
         int i = m_ticketlines.getSelectedIndex();
+        
+        if (i < 0) {
+            if (AppConfig.getInstance().getBoolean("till.customsounds")) {
+                new PlayWave("error.wav").start(); // playing WAVE file 
+            } else {
+                Toolkit.getDefaultToolkit().beep();
+            }
+            return;
+        }
+        
         if (m_oTicket.getLine(i).getProductID().equals("sc999-001")) {
             m_oTicket.setNoSC("1");
         }
@@ -2686,12 +2696,6 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             JOptionPane.showMessageDialog(null,
                     AppLocal.getIntString("message.deleteauxiliaryitem"),
                     "auxiliary Item", JOptionPane.WARNING_MESSAGE);
-        } else if (i < 0) {
-            if (AppConfig.getInstance().getBoolean("till.customsounds")) {
-                new PlayWave("error.wav").start(); // playing WAVE file 
-            } else {
-                Toolkit.getDefaultToolkit().beep();
-            }
         } else {
             removeTicketLine(i); // elimino la linea           
         }
