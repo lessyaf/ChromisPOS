@@ -810,8 +810,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 if (m_oTicket.getLine(i).isProductCom()) {
                     m_oTicket.removeLine(i);
                     m_ticketlines.removeTicketLine(i);
-                }
-                if (m_oTicket.getLine(i).getPromotionId() != null) {
+                } else if (m_oTicket.getLine(i).getPromotionId() != null) {
                     // Check for promotion discounts added to the product
                     m_oTicket.removeLine(i);
                     m_ticketlines.removeTicketLine(i);
